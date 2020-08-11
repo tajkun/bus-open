@@ -1,0 +1,24 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: bus-open
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/bus-open?autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    initialSize: 2
+    minIdle: 1
+    maxActive: 6
+    maxWait: 60000
+
+mybatis-plus:
+  global-config:
+    db-config:
+      insert-strategy: not_empty
+      update-strategy: not_empty
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
