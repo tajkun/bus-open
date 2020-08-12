@@ -8,11 +8,13 @@ import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.mapper.UserMapper;
 import com.langting.busopen.service.IUserService;
 import com.langting.busopen.utils.CommonUtils;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -25,12 +27,18 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements IUserService {
 
-    @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
 //    public UserServiceImpl(UserMapper userMapper) {
 //        this.userMapper = userMapper;
 //    }
+
+    final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    @Autowired
+    public UserServiceImpl(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
     @Override
     @Transactional
@@ -63,7 +71,7 @@ public class UserServiceImpl implements IUserService {
 
         user.setPassword(CommonUtils.md5(user.getPassword()));
         user.setStatus(CommonStatus.VALID.getStatusCode());
-        user.setCreateTime(new Date());
+        user.setCreateTime(df.format(new Date()));
         user.setUpdateTime(user.getCreateTime());
         return userMapper.insert(user);
     }
@@ -99,7 +107,7 @@ public class UserServiceImpl implements IUserService {
         if (user.getSecretKey() != null) {
             oldUser.setSecretKey(user.getSecretKey());
         }
-        oldUser.setUpdateTime(new Date());
+        oldUser.setUpdateTime(df.format(new Date()));
         return userMapper.updateById(oldUser);
     }
 

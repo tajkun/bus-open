@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -19,6 +21,8 @@ import java.util.List;
  **/
 @SpringBootTest
 public class UserTest {
+
+    final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
     private IUserService userService;
@@ -36,7 +40,7 @@ public class UserTest {
         User user = new User();
         user.setUsername("xiaohong").setPassword("123456").setCompanyName("哈哈")
                 .setStatus(1).setMobile("19861800994").setEmail("1234@126.com")
-                .setCreateTime(new Date()).setUpdateTime(user.getCreateTime());
+                .setCreateTime(df.format(new Date())).setUpdateTime(user.getCreateTime());
         userService.addUser(user);
     }
 

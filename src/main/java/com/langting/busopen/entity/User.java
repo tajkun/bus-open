@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.util.Date;
 
 /**
@@ -45,9 +46,9 @@ public class User {
     @TableField(value = "status")
     private Integer status;
     @TableField(value = "create_time")
-    private Date createTime;
+    private String createTime;
     @TableField(value = "update_time")
-    private Date updateTime;
+    private String updateTime;
 
     public boolean validate() {
         return StringUtils.isEmpty(username) ||
