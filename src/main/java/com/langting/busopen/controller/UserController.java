@@ -4,13 +4,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.langting.busopen.entity.User;
 import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.service.IUserService;
+import com.langting.busopen.utils.CommonUtils;
 import com.langting.busopen.vo.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @program: bus-open
@@ -63,13 +67,51 @@ public class UserController {
         return Result.result(user, "返回用户数据成功");
     }
 
-    @PostMapping("/getUserByEmail")
-    public Result getUserByEmail(@RequestParam("email") String email) {
-        User user = userService.getUserByEmail(email);
-        if (user == null) {
-            return Result.error_404("找不到记录");
+    // 接口加密测试
+    @GetMapping("/getUserByEmail")
+    public Result getUserByEmail(@RequestParam("email") String email,
+                                 @RequestParam("name") String name,
+                                 @RequestParam("home") String home,
+                                 @RequestParam("accessKey") String accessKey,
+                                 @RequestParam("timestamp") Long timestamp,
+                                 @RequestParam("nonce") String nonce,
+                                 @RequestParam("sign") String sign) {
+
+        List<String> nonces = new ArrayList<String>(){{
+            add("asd456");
+            add("asd457");
+            add("asd458");
+        }};
+
+        // 避免重放攻击
+        Long interval = (System.currentTimeMillis() - timestamp)/(1000 * 60);
+        if (interval > 15) {
+            return Result.error_502("超出时间范围");
+        } else if(nonces.contains(nonce)){
+            return Result.error_501("重复请求");
         }
-        return Result.result(user, "返回用户数据成功");
+
+        // 参数加密校验
+        String secretKey = userService.getSecretKey(accessKey);
+
+        String signTemp = "accessKey="+accessKey+"&email="+email+"&name="+name+"&home="+home+"&timestamp="+timestamp
+                +"&nonce="+nonce+"&secretKey="+secretKey;
+        System.out.println("serverA: "+signTemp);
+        String serverSign = CommonUtils.md5(signTemp).toUpperCase();
+        System.out.println("sign: "+sign);
+        System.out.println("serverSign: "+serverSign);
+        if (serverSign.equals(sign)) {
+            System.out.println("***********调用************");
+            System.out.println("sign: "+sign);
+            System.out.println("serverSign: "+serverSign);
+            User user = userService.getUserByEmail(email);
+            if (user == null) {
+                return Result.error_404("找不到记录");
+            }
+            return Result.result(user, "返回用户数据成功");
+        } else {
+            return Result.error_500("无权限访问");
+        }
     }
 
     @PostMapping("/addUser")

@@ -3,6 +3,7 @@ package com.langting.busopen;
 import com.langting.busopen.entity.User;
 import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.service.IUserService;
+import com.langting.busopen.utils.KeyGenerator;
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +39,11 @@ public class UserTest {
     public void userServiceTest1() throws BusOpenException {
         System.out.println("-----------------------");
         User user = new User();
-        user.setUsername("xiaohong").setPassword("123456").setCompanyName("哈哈")
-                .setStatus(1).setMobile("19861800994").setEmail("1234@126.com")
+        user.setUsername("xiaolan").setPassword("123456").setCompanyName("啊啊")
+                .setStatus(1).setMobile("19861800992").setEmail("123478@126.com")
+                .setAccessKey(KeyGenerator.getAccessKey())
                 .setCreateTime(df.format(new Date())).setUpdateTime(user.getCreateTime());
+        System.out.println(user);
         userService.addUser(user);
     }
 

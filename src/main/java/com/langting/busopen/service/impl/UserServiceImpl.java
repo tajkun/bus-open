@@ -8,6 +8,7 @@ import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.mapper.UserMapper;
 import com.langting.busopen.service.IUserService;
 import com.langting.busopen.utils.CommonUtils;
+import com.langting.busopen.utils.KeyGenerator;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,6 @@ public class UserServiceImpl implements IUserService {
 
     private final UserMapper userMapper;
 
-//    public UserServiceImpl(UserMapper userMapper) {
-//        this.userMapper = userMapper;
-//    }
-
     final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
@@ -46,7 +43,7 @@ public class UserServiceImpl implements IUserService {
         if (user.validate()) {
             throw new BusOpenException(Constants.ErrorMsg.REQUEST_PARAM_ERROR);
         }
-        //todo 验证
+
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", user.getUsername());
         User oldUser = userMapper.selectOne(queryWrapper);
@@ -62,17 +59,18 @@ public class UserServiceImpl implements IUserService {
         }
 
         queryWrapper.clear();
-        System.out.println("***************"+user.getEmail());
         queryWrapper.eq("email", user.getEmail());
         User oldUser2 = userMapper.selectOne(queryWrapper);
         if (oldUser2 != null) {
             throw new BusOpenException(Constants.ErrorMsg.SAME_EMAIL_USER_ERROR);
         }
 
+        user.setAccessKey(KeyGenerator.getAccessKey());
         user.setPassword(CommonUtils.md5(user.getPassword()));
         user.setStatus(CommonStatus.VALID.getStatusCode());
         user.setCreateTime(df.format(new Date()));
         user.setUpdateTime(user.getCreateTime());
+        System.out.println("^^^^^^^"+user);
         return userMapper.insert(user);
     }
 
@@ -153,6 +151,14 @@ public class UserServiceImpl implements IUserService {
         QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("email", email);
         return userMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public String getSecretKey(String accessKey) {
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq("access_key", accessKey);
+        String secretKey = userMapper.selectOne(wrapper).getSecretKey();
+        return secretKey;
     }
 
 

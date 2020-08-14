@@ -49,6 +49,8 @@ public class User {
     private String createTime;
     @TableField(value = "update_time")
     private String updateTime;
+    @TableField(value = "secretkey_create_time")
+    private String secretkeyCreateTime;
 
     public boolean validate() {
         return StringUtils.isEmpty(username) ||

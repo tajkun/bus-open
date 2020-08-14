@@ -21,5 +21,6 @@ public interface IUserService {
     User getUserByUsername(String name);
     User getUserByMobile(String mobile);
     User getUserByEmail(String email);
+    String getSecretKey(String accessKey);
 
 }
