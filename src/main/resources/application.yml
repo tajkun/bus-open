@@ -15,6 +15,9 @@ spring:
     maxActive: 6
     maxWait: 60000
 
+  redis:
+    host: 39.97.102.53
+
 mybatis-plus:
   global-config:
     db-config:

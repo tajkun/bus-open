@@ -32,13 +32,16 @@ public class APIEncryptionTest {
         // todo 接口参数加密
         String secretKey = "31174C87874045DF862DDF1E2270AD12";
 
+//        String nonce = CommonUtils.generateCode(8);
+        String nonce = "12345678";
+
         Map<String, Object> mapParams = new LinkedHashMap<>();
         mapParams.put("accessKey", "5tZZo5Bj");
         mapParams.put("email", "123@163.com");
         mapParams.put("name", "jiakun");
         mapParams.put("home", "哈哈哈");
         mapParams.put("timestamp", System.currentTimeMillis());
-        mapParams.put("nonce","asd450");
+        mapParams.put("nonce", nonce);
 
         System.out.println("****: "+mapParams.toString());
 

@@ -1,20 +1,19 @@
 package com.langting.busopen.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import com.langting.busopen.entity.User;
 import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.service.IUserService;
 import com.langting.busopen.utils.CommonUtils;
 import com.langting.busopen.vo.Result;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateFormatUtils;
+import org.omg.CORBA.PRIVATE_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @program: bus-open
@@ -28,10 +27,12 @@ import java.util.Map;
 public class UserController {
 
     private final IUserService userService;
+    private final StringRedisTemplate redisTemplate;
 
     @Autowired
-    public UserController(IUserService userService) {
+    public UserController(IUserService userService, StringRedisTemplate redisTemplate) {
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping("/allUsers")
@@ -77,18 +78,21 @@ public class UserController {
                                  @RequestParam("nonce") String nonce,
                                  @RequestParam("sign") String sign) {
 
-        List<String> nonces = new ArrayList<String>(){{
-            add("asd456");
-            add("asd457");
-            add("asd458");
-        }};
+
+        String redisnonce = this.redisTemplate.opsForValue().get(accessKey);
 
         // 避免重放攻击
         Long interval = (System.currentTimeMillis() - timestamp)/(1000 * 60);
         if (interval > 15) {
             return Result.error_502("超出时间范围");
-        } else if(nonces.contains(nonce)){
+        } else if(nonce.equals(redisnonce)){
+            System.out.println("redis: "+redisnonce);
+            System.out.println("nonce :"+nonce);
             return Result.error_501("重复请求");
+        } else {
+            // todo 可以利用MQ缓冲
+            // 将nonce保存到redis
+            this.redisTemplate.opsForValue().set(accessKey, nonce, 15, TimeUnit.MINUTES);
         }
 
         // 参数加密校验
