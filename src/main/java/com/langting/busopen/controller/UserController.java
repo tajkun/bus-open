@@ -4,6 +4,7 @@ import com.langting.busopen.entity.User;
 import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.service.IUserService;
 import com.langting.busopen.utils.CommonUtils;
+import com.langting.busopen.vo.LoginVo;
 import com.langting.busopen.vo.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.omg.CORBA.PRIVATE_MEMBER;
@@ -12,7 +13,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,6 +36,23 @@ public class UserController {
     public UserController(IUserService userService, StringRedisTemplate redisTemplate) {
         this.userService = userService;
         this.redisTemplate = redisTemplate;
+    }
+
+    @PostMapping("/loginByUser")
+    public Result loginByUser(@RequestBody LoginVo loginVo) {
+        log.warn("----------调用loginByUser()-----------");
+
+        User user = userService.getUserByUsername(loginVo.getUsername());
+        if (user == null || user.getRole() == 1) {
+            return Result.error_500("用户名错误");
+        } else if (!user.getPassword().equals(loginVo.getPassword())) {
+             return Result.error_500("密码错误");
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("user", user);
+        map.put("token", "token");
+        return Result.result(map, "用户登录成功");
     }
 
     @GetMapping("/allUsers")

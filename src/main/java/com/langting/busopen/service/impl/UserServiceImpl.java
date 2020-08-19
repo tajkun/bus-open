@@ -67,6 +67,7 @@ public class UserServiceImpl implements IUserService {
 
         user.setAccessKey(KeyGenerator.getAccessKey());
         user.setPassword(CommonUtils.md5(user.getPassword()));
+        user.setRole(0);
         user.setStatus(CommonStatus.VALID.getStatusCode());
         user.setCreateTime(df.format(new Date()));
         user.setUpdateTime(user.getCreateTime());

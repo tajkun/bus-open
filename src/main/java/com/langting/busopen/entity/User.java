@@ -43,6 +43,10 @@ public class User {
     private String accessKey;
     @TableField(value = "secret_key")
     private String secretKey;
+    @TableField(value = "avatar")
+    private String avatar;
+    @TableField(value = "role")
+    private Integer role;
     @TableField(value = "status")
     private Integer status;
     @TableField(value = "create_time")

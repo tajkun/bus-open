@@ -30,7 +30,7 @@ public class Result implements Serializable {
     //返回处理信息
     private String message = "操作成功！";
     //返回数据对象
-    private Object result;
+    private Object data;
     //时间戳
     private long timestamp = System.currentTimeMillis();
 
@@ -49,7 +49,7 @@ public class Result implements Serializable {
         result.setSuccess(true);
         result.setCode(200);
         result.setMessage(tipMessage);
-        result.setResult(JSONObject.toJSON(resultData));
+        result.setData(JSONObject.toJSON(resultData));
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
@@ -59,7 +59,7 @@ public class Result implements Serializable {
         result.setSuccess(true);
         result.setCode(code);
         result.setMessage(tipMessage);
-        result.setResult(resultData);
+        result.setData(resultData);
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }
@@ -69,7 +69,7 @@ public class Result implements Serializable {
         result.setSuccess(isSuccess);
         result.setMessage(tipMessage);
         result.setCode(code);
-        result.setResult("");
+        result.setData("");
         result.setTimestamp(System.currentTimeMillis());
         return result;
     }

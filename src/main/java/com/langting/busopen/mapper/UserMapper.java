@@ -14,6 +14,6 @@ import java.util.List;
  **/
 public interface UserMapper extends BaseMapper<User> {
 
-    @Select("select * from open_user order by id desc")
+    @Select("select * from open_user where role = 0 order by id desc")
     List<User> getAllUsers();
 }
