@@ -49,9 +49,28 @@ public class UserController {
              return Result.error_500("密码错误");
         }
 
+        //todo token生成
         Map<String, Object> map = new HashMap<>();
         map.put("user", user);
         map.put("token", "token");
+        return Result.result(map, "用户登录成功");
+    }
+
+    @PostMapping("/loginByAdmin")
+    public Result loginByAdmin(@RequestBody LoginVo loginVo) {
+        log.warn("----------调用loginByAdmin()-----------");
+
+        User user = userService.getUserByUsername(loginVo.getUsername());
+        if (user == null || user.getRole() == 0) {
+            return Result.error_500("用户名错误");
+        } else if (!user.getPassword().equals(loginVo.getPassword())) {
+            return Result.error_500("密码错误");
+        }
+
+        //todo token生成
+        Map<String, Object> map = new HashMap<>();
+        map.put("user", user);
+        map.put("token", "token11");
         return Result.result(map, "用户登录成功");
     }
 
