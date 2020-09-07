@@ -1,5 +1,6 @@
 package com.langting.busopen.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.langting.busopen.entity.User;
 import com.langting.busopen.exception.BusOpenException;
 import com.langting.busopen.service.IUserService;
@@ -12,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,10 +47,14 @@ public class UserController {
              return Result.error_500("密码错误");
         }
 
-        //todo token生成
+        //todo jwt
         Map<String, Object> map = new HashMap<>();
         map.put("user", user);
-        map.put("token", "token");
+        map.put("token", user.getUsername());
+        //用户权限
+        List<String> list = new ArrayList();
+        list.add("user");
+        map.put("roles", list);
         return Result.result(map, "用户登录成功");
     }
 
@@ -67,10 +69,14 @@ public class UserController {
             return Result.error_500("密码错误");
         }
 
-        //todo token生成
+        //todo jwt
         Map<String, Object> map = new HashMap<>();
         map.put("user", user);
-        map.put("token", "token11");
+        map.put("token", user.getUsername());
+        //用户权限
+        List<String> list = new ArrayList();
+        list.add("admin");
+        map.put("roles", list);
         return Result.result(map, "用户登录成功");
     }
 
@@ -88,14 +94,26 @@ public class UserController {
         return Result.result(user, "返回用户数据成功");
     }
 
-    @PostMapping("/getUserByUsername")
-    public Result getUserByUsername(@RequestParam("name") String name) {
-        log.warn("----------调用getUserById()-----------");
+    @GetMapping("/getUserByUsername")
+    public Result getUserByUsername(@RequestParam("token") String name) {
+        log.warn("----------调用getUserByUsername()-----------");
         User user = userService.getUserByUsername(name);
         if (user == null) {
             return Result.error_404("找不到记录");
         }
-        return Result.result(user, "返回用户数据成功");
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("user", user);
+        map.put("token", user.getUsername());
+        //用户权限
+        List<String> list = new ArrayList();
+        if (user.getRole() == 1) {
+            list.add("admin");
+        } else {
+            list.add("user");
+        }
+        map.put("roles", list);
+        return Result.result(map, "返回用户数据成功");
     }
 
     @PostMapping("/getUserByMobile")
@@ -107,8 +125,10 @@ public class UserController {
         return Result.result(user, "返回用户数据成功");
     }
 
-    // 接口加密测试
-    @GetMapping("/getUserByEmail")
+    /**
+    * 后台加密测试的接口
+    */
+    @PostMapping("/getUserByEmail")
     public Result getUserByEmail(@RequestParam("email") String email,
                                  @RequestParam("name") String name,
                                  @RequestParam("home") String home,
@@ -118,35 +138,47 @@ public class UserController {
                                  @RequestParam("sign") String sign) {
 
 
-        String redisnonce = this.redisTemplate.opsForValue().get(accessKey);
+        //根据用户的accessKey从redis中取出nonce
+        String redisNonce = this.redisTemplate.opsForValue().get(accessKey);
+        log.warn("redisNonce: {}", redisNonce);
+        log.warn("nonce: {}", nonce);
 
-        // 避免重放攻击
+        //避免重放攻击
         Long interval = (System.currentTimeMillis() - timestamp)/(1000 * 60);
         if (interval > 15) {
             return Result.error_502("超出时间范围");
-        } else if(nonce.equals(redisnonce)){
-            System.out.println("redis: "+redisnonce);
-            System.out.println("nonce :"+nonce);
+        } else if(nonce.equals(redisNonce)){
             return Result.error_501("重复请求");
         } else {
-            // todo 可以利用MQ缓冲
-            // 将nonce保存到redis
-            this.redisTemplate.opsForValue().set(accessKey, nonce, 15, TimeUnit.MINUTES);
+            // todo 可以加入MQ
+            // 将nonce保存到redis，15分钟后过期
+            this.redisTemplate.opsForValue().set(accessKey, nonce, 3, TimeUnit.MINUTES);
         }
 
-        // 参数加密校验
+        //根据用户的accessKey拿到密钥
         String secretKey = userService.getSecretKey(accessKey);
+        //使用TreeMap完成参数排序（A-Z）
+        TreeMap<String, Object> treeMap = new TreeMap<>();
+        treeMap.put("accessKey", accessKey);
+        treeMap.put("email", email);
+        treeMap.put("name", name);
+        treeMap.put("home", home);
+        treeMap.put("timestamp", timestamp);
+        treeMap.put("nonce", nonce);
+        treeMap.put("secretKey", secretKey);
 
-        String signTemp = "accessKey="+accessKey+"&email="+email+"&name="+name+"&home="+home+"&timestamp="+timestamp
-                +"&nonce="+nonce+"&secretKey="+secretKey;
-        System.out.println("serverA: "+signTemp);
-        String serverSign = CommonUtils.md5(signTemp).toUpperCase();
-        System.out.println("sign: "+sign);
-        System.out.println("serverSign: "+serverSign);
+        //拼接规范参数串
+        String paramString = treeMap.toString().replace(", ","&")
+                .substring(1)
+                .replace("}","");
+        log.warn("paramString: {}", paramString);
+        //生成签名
+        String serverSign = CommonUtils.md5(paramString).toUpperCase();
+        log.warn("serverSign: {}", serverSign);
+        log.warn("clientSign: {}", sign);
+
         if (serverSign.equals(sign)) {
             System.out.println("***********调用************");
-            System.out.println("sign: "+sign);
-            System.out.println("serverSign: "+serverSign);
             User user = userService.getUserByEmail(email);
             if (user == null) {
                 return Result.error_404("找不到记录");
@@ -156,6 +188,7 @@ public class UserController {
             return Result.error_500("无权限访问");
         }
     }
+
 
     @PostMapping("/addUser")
     public Result addUser(@RequestBody User user) throws BusOpenException {

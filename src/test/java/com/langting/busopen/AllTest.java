@@ -24,9 +24,9 @@ public class AllTest {
         list.add("uuxd");
         list.add("bdfg");
         list.add("bade");
-        Collections.sort(list);
 
-        list.forEach(s -> System.out.println(s));
+
+        System.out.println(list);
 
     }
 }
